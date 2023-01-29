@@ -17,29 +17,29 @@ function logDebugMessage(message) {
  * Main Program - Start Server
  */
 const server = http.createServer(async (req, res) => {
-  if (req.url == '/favicon.ico') {
+  if (req.url === '/favicon.ico') {
     res.writeHead(200);
     res.end('');
   }
 
-  if (req.url == '/') {
-    logDebugMessage(req.url);
-    const queryObject = url.parse(req.url,true).query;
-    let searchName = '';
-    if (queryObject.songName) {
-      searchName = queryObject.songName;
-    }
+  if (req.url === '/') {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/html; charset=UTF-8');
     let htmlText = 'Hello World';
     res.end(htmlText);
   }
 
-  if (req.url == '/test') {
-    let browser = null;
+  if (req.url.includes('stb')) {
+    const queryObject = url.parse(req.url,true).query;
+    logDebugMessage(JSON.stringify(queryObject, null, 2));
 
+    let browser = null;
     try {
-      browser = await puppeteer.launch({ headless: true });
+      if (process.env.NODE_ENV === 'prod') {
+        browser = await puppeteer.launch({ headless: true });
+      } else {
+        browser = await puppeteer.launch({ headless: false, executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' });
+      }
       const page = await browser.newPage();
   
       await page.goto('http://www.example.com/', {waitUntil: 'networkidle2'});
@@ -48,7 +48,8 @@ const server = http.createServer(async (req, res) => {
       res.end(screenshot, 'binary');
     } catch (error) {
       if (!res.headersSent) {
-        res.status(400).send(error.message);
+        res.statusCode = 400;
+        res.end(error.message);
       }
     } finally {
       if (browser) {
@@ -59,5 +60,6 @@ const server = http.createServer(async (req, res) => {
 });
     
 server.listen(port, hostname, () => {
-    console.log(`Server running at http://${hostname}:${port}/`);
+  const env = (process.env.NODE_ENV === 'prod') ? 'PROD' : 'DEV'
+  console.log(`Server running on ${env} at http://${hostname}:${port}/`);
 });
