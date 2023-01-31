@@ -317,6 +317,14 @@ const server = http.createServer(async (req, res) => {
 
         console.log('Start Processing ...');
 
+        let objResult = {
+          status: '',
+          errMessage: '',
+          amountTotal: 0,
+          listMergedCard: [],
+          listSuccess: [],
+          listFail: []
+        }
         let browser = null;
         try {
           if (process.env.NODE_ENV === 'prod') {
@@ -365,12 +373,6 @@ const server = http.createServer(async (req, res) => {
           // Loop for Add Card
           let makeDefault = true; // Flag for Make Default on first item
           let processResult = false;
-          let objResult = {
-            amountTotal: 0,
-            listMergedCard: [],
-            listSuccess: [],
-            listFail: []
-          }
           for(let i = 0; i < dataItems.length; i++) {
             if (inputJSON) {
               const item = dataItems[i];
@@ -379,7 +381,7 @@ const server = http.createServer(async (req, res) => {
               // Convert each CSV to JSON
               const line = dataItems[i];
               if (line != '') {
-                const data = line.split(',')
+                const data = line.split(',');
                 let item = {
                   orderID: i.toString().padStart(3, '0'),
                   cardNumber: data[0],
@@ -391,14 +393,17 @@ const server = http.createServer(async (req, res) => {
             }
 
             // Show Progress
-            if ((i % 10) === 0) {
-              console.log(`Processed item: ${i}`)
+            if ((i === 0) || (((i + 1) % 10) === 0)) {
+              console.log(`Processed item: ${i + 1}`);
             }
 
             if (processResult && makeDefault) {
               makeDefault = false;
             }
           }
+
+          // Set Success
+          objResult.status = 'Success';
 
           // Process Time
           let endTime = new Date();
@@ -422,11 +427,17 @@ const server = http.createServer(async (req, res) => {
             })
           }
 
-          res.end(JSON.stringify(payload, null, 2));
+          res.statusCode = 200;
+          res.end(JSON.stringify(objResult, null, 2));
         } catch (error) {
           console.log(error.message);
+
+          // Set Fail and error message
+          objResult.status = 'Fail';
+          objResult.errMessage = error.message;
+
           res.statusCode = 400;
-          res.end(error.message);
+          res.end(objResult);
         } finally {
           if (browser) {
             browser.close();
