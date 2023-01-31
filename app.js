@@ -8,6 +8,7 @@ const baseDir = __dirname + "/";
 const debug = true;
 
 const normalText = 'Hello World';
+const idelTime = 500;
 
 function logDebugMessage(message) {
   if ((process.env.NODE_ENV !== 'prod') && (debug)) {
@@ -39,7 +40,7 @@ async function processMergeCard(page, item, makeDefault, objResult) {
 
     // Click 'Add a Card'
     await page.$eval('#card_add', el => el.click());
-    await page.waitForNetworkIdle({idleTime: 500});
+    await page.waitForNetworkIdle({idleTime: idelTime});
 
     // Fill Info
     // Card Nick Name
@@ -51,7 +52,7 @@ async function processMergeCard(page, item, makeDefault, objResult) {
 
     // Click btn Add Card
     await page.$eval('button[type=submit]', el => el.click());
-    await page.waitForNetworkIdle({idleTime: 500});
+    await page.waitForNetworkIdle({idleTime: idelTime});
 
     [error, result] = await runPromise(page.$eval('#card-properties > span.balance.numbers', el => el.innerHTML));
     if (error) {
@@ -75,11 +76,11 @@ async function processMergeCard(page, item, makeDefault, objResult) {
 
       // Click Remove Card
       await page.$eval('#btn06', el => el.click());
-      await page.waitForNetworkIdle({idleTime: 500});
+      await page.waitForNetworkIdle({idleTime: idelTime});
 
       // Click Submit
       await page.$eval('#Button1', el => el.click());
-      await page.waitForNetworkIdle({idleTime: 500});
+      await page.waitForNetworkIdle({idleTime: idelTime});
 
       return false;
     }
@@ -88,7 +89,7 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     if (makeDefault) {
       // Click Set Default Card
       await page.$eval('#btn08', el => el.click());
-      await page.waitForNetworkIdle({idleTime: 500});
+      await page.waitForNetworkIdle({idleTime: idelTime});
 
       logDebugMessage(`** Default Card **`);
       card.cardBalanceAfter = 'DEFAULT';
@@ -100,11 +101,11 @@ async function processMergeCard(page, item, makeDefault, objResult) {
 
     // Click Transfer Funds
     await page.$eval('#btn03', el => el.click());
-    await page.waitForNetworkIdle({idleTime: 500});
+    await page.waitForNetworkIdle({idleTime: idelTime});
 
     // Click Submit
     await page.$eval('#reload_submit', el => el.click());
-    await page.waitForNetworkIdle({idleTime: 500});
+    await page.waitForNetworkIdle({idleTime: idelTime});
 
     [error, result] = await runPromise(page.$eval('#card-properties > span.balance.numbers', el => el.innerHTML));
     if (error) {
@@ -129,11 +130,11 @@ async function processMergeCard(page, item, makeDefault, objResult) {
 
       // Click Remove Card
       await page.$eval('#btn06', el => el.click());
-      await page.waitForNetworkIdle({idleTime: 500});
+      await page.waitForNetworkIdle({idleTime: idelTime});
 
       // Click Submit
       await page.$eval('#Button1', el => el.click());
-      await page.waitForNetworkIdle({idleTime: 500});
+      await page.waitForNetworkIdle({idleTime: idelTime});
 
       return true;
     }
@@ -141,7 +142,7 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     // Transfer Failed, then set it as default
     // Click Set Default Card
     await page.$eval('#btn08', el => el.click());
-    await page.waitForNetworkIdle({idleTime: 500});
+    await page.waitForNetworkIdle({idleTime: idelTime});
 
     logDebugMessage(`** Default Card **`);
     objResult.listMergedCard.push(card);
@@ -255,7 +256,7 @@ const server = http.createServer(async (req, res) => {
         await page.type('#Email', email);
         await page.type('#Password', password);
         await page.$eval('button[type=submit]', el => el.click());
-        await page.waitForNetworkIdle({idleTime: 500});
+        await page.waitForNetworkIdle({idleTime: idelTime});
 
         const screenshot = await page.screenshot();
     
@@ -364,11 +365,11 @@ const server = http.createServer(async (req, res) => {
           await page.type('#Email', email);
           await page.type('#Password', password);
           await page.$eval('button[type=submit]', el => el.click());
-          await page.waitForNetworkIdle({idleTime: 500});
+          await page.waitForNetworkIdle({idleTime: idelTime});
 
           // Click 'Card'
           await page.$eval('input[type=submit]', el => el.click());
-          await page.waitForNetworkIdle({idleTime: 500});
+          await page.waitForNetworkIdle({idleTime: idelTime});
 
           // Loop for Add Card
           let makeDefault = true; // Flag for Make Default on first item
@@ -437,7 +438,7 @@ const server = http.createServer(async (req, res) => {
           objResult.errMessage = error.message;
 
           res.statusCode = 400;
-          res.end(objResult);
+          res.end(JSON.stringify(objResult, null, 2));
         } finally {
           if (browser) {
             browser.close();
