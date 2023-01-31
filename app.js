@@ -315,6 +315,8 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
+        console.log('Start Processing ...');
+
         let browser = null;
         try {
           if (process.env.NODE_ENV === 'prod') {
@@ -386,6 +388,11 @@ const server = http.createServer(async (req, res) => {
                 }
                 processResult = await processMergeCard(page, item, makeDefault, objResult);
               }
+            }
+
+            // Show Progress
+            if ((i % 10) === 0) {
+              console.log(`Processed item: ${i}`)
             }
 
             if (processResult && makeDefault) {
