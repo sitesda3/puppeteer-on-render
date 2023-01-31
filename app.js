@@ -151,7 +151,11 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     console.log(`**** Error on processMergeCard ****`);
 
     // Take Error Screen Shot 
-    objResult.errScreenShot = await page.screenshot({ encoding: "base64" })
+    objResult.errScreenShot = await page.screenshot({ fullPage: true, encoding: "base64" })
+    .then((data) => {
+      let base64Encode = `data:image/png;base64,${data}`;
+      return base64Encode;
+    });
 
     // Show Result
     console.log(`Process amount: ${objResult.amountTotal}`);
