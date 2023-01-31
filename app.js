@@ -150,6 +150,9 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     // Do something before throw error
     console.log(`**** Error on processMergeCard ****`);
 
+    // Take Error Screen Shot 
+    objResult.errScreenShot = await page.screenshot({ encoding: "base64" })
+
     // Show Result
     console.log(`Process amount: ${objResult.amountTotal}`);
     if (objResult.listFail.length > 0) {
@@ -321,6 +324,7 @@ const server = http.createServer(async (req, res) => {
         let objResult = {
           status: '',
           errMessage: '',
+          errScreenShot: '',
           amountTotal: 0,
           listMergedCard: [],
           listSuccess: [],
