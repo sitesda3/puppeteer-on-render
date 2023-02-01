@@ -157,15 +157,6 @@ async function processMergeCard(page, item, makeDefault, objResult) {
       return base64Encode;
     });
 
-    // Show Result
-    console.log(`Process amount: ${objResult.amountTotal}`);
-    if (objResult.listFail.length > 0) {
-      console.log(`*** Failed card ***`);
-      objResult.listFail.map((card) => {
-        console.log(Object.values(card).toString());
-      })
-    }
-
     throw error;
   }
 
@@ -331,7 +322,7 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        console.log('Start Processing ...');
+        console.log(`Start Processing ${dataItems.length} items`);
 
         let objResult = {
           status: '',
@@ -391,8 +382,14 @@ const server = http.createServer(async (req, res) => {
           let makeDefault = true; // Flag for Make Default on first item
           let processResult = false;
           for(let i = 0; i < dataItems.length; i++) {
-            let error, result, item;
+            // Show Progress
+            if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
+                console.log(`Processed item: ${i + 1}`);
+            }
+
             do {
+              let error, result, item;
+
               if (inputJSON) {
                 item = dataItems[i];
               } else {
@@ -410,18 +407,13 @@ const server = http.createServer(async (req, res) => {
                 }
               }
               [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
-              if (error) {
+              if (error !== null) {
                 // Click 'Card'
                 await page.$eval('input[type=submit]', el => el.click());
                 await page.waitForNetworkIdle({idleTime: idelTime});
               }
               processResult = result;
-            } while (error);
-
-            // Show Progress
-            if ((i === 0) || (((i + 1) % 10) === 0)) {
-              console.log(`Processed item: ${i + 1}`);
-            }
+            } while (error !== null);
 
             if (processResult && makeDefault) {
               makeDefault = false;
