@@ -312,6 +312,14 @@ const server = http.createServer(async (req, res) => {
         // Validate dataItems
         let inputJSON = false
         if (dataItems && Array.isArray(dataItems)) {
+          // Empty item
+          if (dataItems.length === 0) {
+            res.statusCode = 200;
+            res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+            res.end(normalText);
+            return;
+          }
+
           let item = dataItems[0];
           if (typeof item === 'object' && item !== null) {
             inputJSON = true
@@ -383,23 +391,32 @@ const server = http.createServer(async (req, res) => {
           let makeDefault = true; // Flag for Make Default on first item
           let processResult = false;
           for(let i = 0; i < dataItems.length; i++) {
-            if (inputJSON) {
-              const item = dataItems[i];
-              processResult = await processMergeCard(page, item, makeDefault, objResult);
-            } else {
-              // Convert each CSV to JSON
-              const line = dataItems[i];
-              if (line != '') {
+            let error, result, item;
+            do {
+              if (inputJSON) {
+                item = dataItems[i];
+              } else {
+                // Convert each CSV to JSON
+                const line = dataItems[i];
+                if (line === '') {
+                  continue;
+                }
                 const data = line.split(',');
-                let item = {
+                item = {
                   orderID: i.toString().padStart(3, '0'),
                   cardNumber: data[0],
                   cardCode: data[1],
                   balance: data[2]
                 }
-                processResult = await processMergeCard(page, item, makeDefault, objResult);
               }
-            }
+              [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
+              if (error) {
+                // Click 'Card'
+                await page.$eval('input[type=submit]', el => el.click());
+                await page.waitForNetworkIdle({idleTime: idelTime});
+              }
+              processResult = result;
+            } while (error);
 
             // Show Progress
             if ((i === 0) || (((i + 1) % 10) === 0)) {
