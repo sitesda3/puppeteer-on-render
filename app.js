@@ -11,8 +11,9 @@ const normalText = 'Hello World';
 const idelTime = 500;
 
 function logDebugMessage(message) {
-  if ((process.env.NODE_ENV !== 'prod') && (debug)) {
-    console.log(message);
+  // if ((process.env.NODE_ENV !== 'prod') && (debug)) {
+  if (debug) {
+      console.log(message);
   }
 }
 
@@ -151,11 +152,13 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     console.log(`**** Error on processMergeCard ****`);
 
     // Take Error Screen Shot 
+    /*
     objResult.errScreenShot = await page.screenshot({ fullPage: true, encoding: "base64" })
     .then((data) => {
       let base64Encode = `data:image/png;base64,${data}`;
       return base64Encode;
     });
+    */
 
     throw error;
   }
@@ -383,9 +386,9 @@ const server = http.createServer(async (req, res) => {
           let processResult = false;
           for(let i = 0; i < dataItems.length; i++) {
             // Show Progress
-            if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
+            // if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
                 console.log(`Processed item: ${i + 1}`);
-            }
+            // }
 
             do {
               let error, result, item;
@@ -407,13 +410,13 @@ const server = http.createServer(async (req, res) => {
                 }
               }
               [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
-              if (error !== null) {
+              if (error) {
                 // Click 'Card'
                 await page.$eval('input[type=submit]', el => el.click());
                 await page.waitForNetworkIdle({idleTime: idelTime});
               }
               processResult = result;
-            } while (error !== null);
+            } while (error);
 
             if (processResult && makeDefault) {
               makeDefault = false;
