@@ -347,7 +347,7 @@ const server = http.createServer(async (req, res) => {
 
         // Set delay as appropriate
         const delayMs = 2000;
-        setTimeout(async () => {
+        return setTimeout(async () => {
           console.log("Timeout complete, starting job...");
           // Kick off a new job by adding it to the work queue; Response is send in the consumer.js of this job
           let objResult = {
@@ -403,9 +403,9 @@ const server = http.createServer(async (req, res) => {
             let processResult = false;
             for(let i = 0; i < dataItems.length; i++) {
               // Show Progress
-              // if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
+              if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 5) === 0)) {
                 console.log(`Processed item: ${i + 1}`);
-              // }
+              }
   
               let error, result, item;
               do {
