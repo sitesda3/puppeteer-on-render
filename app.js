@@ -165,6 +165,23 @@ async function processMergeCard(page, item, makeDefault, objResult) {
   return true;
 }
 
+async function doLogin(browser, url, email, password) {
+  try {
+    let page = await browser.newPage();
+    await page.goto(url, {waitUntil: 'networkidle2'});
+  
+    // Login by Fill User / Password
+    await page.type('#Email', email);
+    await page.type('#Password', password);
+    await page.$eval('button[type=submit]', el => el.click());
+    await page.waitForNetworkIdle({idleTime: idelTime});
+  
+    return page;
+  } catch (error) {
+    throw error
+  }
+}
+
 /**
  * Main Program - Start Server
  */
@@ -325,112 +342,134 @@ const server = http.createServer(async (req, res) => {
         }
 
         console.log(`Start Processing ${dataItems.length} items`);
+        res.statusCode = 200;
+        res.end('Ready to process and will notify when done');
 
-        let objResult = {
-          status: '',
-          errMessage: '',
-          errScreenShot: '',
-          amountTotal: 0,
-          listMergedCard: [],
-          listSuccess: [],
-          listFail: []
-        }
-        let browser = null;
-        try {
-          if (process.env.NODE_ENV === 'prod') {
-            browser = await puppeteer.launch({
-              headless: true,
-              ignoreHTTPSErrors: true,
-              slowMo: 0,
-              args: [
-                '--disable-gpu',
-                '--disable-dev-shm-usage',
-                '--disable-setuid-sandbox',
-                '--no-first-run',
-                '--no-sandbox',
-                '--no-zygote'
-              ]
-            });
-          } else {
-            browser = await puppeteer.launch({
-              headless: false,
-              ignoreHTTPSErrors: true,
-              slowMo: 0,
-              args: [
-                '--disable-gpu',
-                '--disable-dev-shm-usage',
-                '--disable-setuid-sandbox',
-                '--no-first-run',
-                '--no-sandbox',
-                '--no-zygote'
-              ],
-              executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-            });
+        // Set delay as appropriate
+        const delayMs = 2000;
+        setTimeout(async () => {
+          console.log("Timeout complete, starting job...");
+          // Kick off a new job by adding it to the work queue; Response is send in the consumer.js of this job
+          let objResult = {
+            status: '',
+            errMessage: '',
+            errScreenShot: '',
+            amountTotal: 0,
+            listMergedCard: [],
+            listSuccess: [],
+            listFail: []
           }
-          const page = await browser.newPage();
-          await page.goto('https://www.starbuckscardth.in.th/Authorize', {waitUntil: 'networkidle2'});
-  
-          // Login by Fill User / Password
-          await page.type('#Email', email);
-          await page.type('#Password', password);
-          await page.$eval('button[type=submit]', el => el.click());
-          await page.waitForNetworkIdle({idleTime: idelTime});
-
-          // Click 'Card'
-          await page.$eval('input[type=submit]', el => el.click());
-          await page.waitForNetworkIdle({idleTime: idelTime});
-
-          // Loop for Add Card
-          let makeDefault = true; // Flag for Make Default on first item
-          let processResult = false;
-          for(let i = 0; i < dataItems.length; i++) {
-            // Show Progress
-            // if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
-              console.log(`Processed item: ${i + 1}`);
-            // }
-
-            let error, result, item;
-            do {
-              if (inputJSON) {
-                item = dataItems[i];
-              } else {
-                // Convert each CSV to JSON
-                const line = dataItems[i];
-                if (line === '') {
-                  continue;
-                }
-                const data = line.split(',');
-                item = {
-                  orderID: i.toString().padStart(3, '0'),
-                  cardNumber: data[0],
-                  cardCode: data[1],
-                  balance: data[2]
-                }
-              }
-              error = null;
-              [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
-              if (error) {
-                // Click 'Card'
-                console.log(`Try Re-Add Card`);
-                let err, ret
-                [err, ret] = await runPromise(page.$eval('input[type=submit]', el => el.click()));
-                await page.waitForNetworkIdle({idleTime: idelTime});
-                if (err) {
-                  console.log(`Re-Add Card Fail`);
-                }
-              }
-              processResult = result;
-            } while (error);
-
-            if (processResult && makeDefault) {
-              makeDefault = false;
+          let browser = null;
+          try {
+            if (process.env.NODE_ENV === 'prod') {
+              browser = await puppeteer.launch({
+                headless: true,
+                ignoreHTTPSErrors: true,
+                slowMo: 0,
+                args: [
+                  '--disable-gpu',
+                  '--disable-dev-shm-usage',
+                  '--disable-setuid-sandbox',
+                  '--no-first-run',
+                  '--no-sandbox',
+                  '--no-zygote'
+                ]
+              });
+            } else {
+              browser = await puppeteer.launch({
+                headless: false,
+                ignoreHTTPSErrors: true,
+                slowMo: 0,
+                args: [
+                  '--disable-gpu',
+                  '--disable-dev-shm-usage',
+                  '--disable-setuid-sandbox',
+                  '--no-first-run',
+                  '--no-sandbox',
+                  '--no-zygote'
+                ],
+                executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+              });
             }
+            const stbUrl = 'https://www.starbuckscardth.in.th/Authorize';
+            let page = await doLogin(browser, stbUrl, email, password);
+  
+            // Click 'Card'
+            await page.$eval('input[type=submit]', el => el.click());
+            await page.waitForNetworkIdle({idleTime: idelTime});
+  
+            // Loop for Add Card
+            let makeDefault = true; // Flag for Make Default on first item
+            let processResult = false;
+            for(let i = 0; i < dataItems.length; i++) {
+              // Show Progress
+              // if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
+                console.log(`Processed item: ${i + 1}`);
+              // }
+  
+              let error, result, item;
+              do {
+                if (inputJSON) {
+                  item = dataItems[i];
+                } else {
+                  // Convert each CSV to JSON
+                  const line = dataItems[i];
+                  if (line === '') {
+                    continue;
+                  }
+                  const data = line.split(',');
+                  item = {
+                    orderID: i.toString().padStart(3, '0'),
+                    cardNumber: data[0],
+                    cardCode: data[1],
+                    balance: data[2]
+                  }
+                }
+                error = null;
+                [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
+                if (error) {
+                  let retAdd, errAdd = null;
+                  let ret1, err1 = null;
+                  do {
+                    console.log(`Try Re-Add Card`);
+                    // Click 'Card'
+                    [errAdd, retAdd] = await runPromise(page.$eval('input[type=submit]', el => el.click()));
+                    [err1, ret1] = await page.waitForNetworkIdle({idleTime: idelTime});
+                    if (errAdd) {
+                      let errLogin = null;
+                      console.log(`Try Re-Login`);
+                      [errLogin, page] = await doLogin(browser, stbUrl, email, password);
+                      if (errLogin) {
+                        console.log(`Re-Login Error`);
+                        throw errLogin;
+                      }
+                    }
+                  } while (errAdd);
+                }
+                processResult = result;
+              } while (error);
+  
+              if (processResult && makeDefault) {
+                makeDefault = false;
+              }
+            }
+  
+            // Set Success
+            objResult.status = 'Success';
+          } catch (error) {
+            console.log(error.message);
+  
+            // Set Fail and error message
+            objResult.status = 'Fail';
+            objResult.errMessage = error.message;
           }
 
-          // Set Success
-          objResult.status = 'Success';
+          if (browser) {
+            browser.close();
+          }
 
           // Process Time
+          console.log(`*** Finished ***`);
           let endTime = new Date();
           console.log(`Start At: ${startTime}`)
           console.log(`End At: ${endTime}`)
@@ -452,22 +491,9 @@ const server = http.createServer(async (req, res) => {
             })
           }
 
-          res.statusCode = 200;
-          res.end(JSON.stringify(objResult, null, 2));
-        } catch (error) {
-          console.log(error.message);
+          // TODO: Notify
 
-          // Set Fail and error message
-          objResult.status = 'Fail';
-          objResult.errMessage = error.message;
-
-          res.statusCode = 400;
-          res.end(JSON.stringify(objResult, null, 2));
-        } finally {
-          if (browser) {
-            browser.close();
-          }
-        }
+        }, delayMs);
       });
 
       return;
