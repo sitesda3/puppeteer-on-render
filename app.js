@@ -11,9 +11,8 @@ const normalText = 'Hello World';
 const idelTime = 500;
 
 function logDebugMessage(message) {
-  // if ((process.env.NODE_ENV !== 'prod') && (debug)) {
-  if (debug) {
-      console.log(message);
+  if ((process.env.NODE_ENV !== 'prod') && (debug)) {
+    console.log(message);
   }
 }
 
@@ -149,7 +148,7 @@ async function processMergeCard(page, item, makeDefault, objResult) {
     objResult.listMergedCard.push(card);
   } catch (error) {
     // Do something before throw error
-    console.log(`**** Error on processMergeCard ****`);
+    console.log(`**** Error on processMergeCard ${card.cardNumber} ****`);
 
     // Take Error Screen Shot 
     /*
@@ -387,12 +386,11 @@ const server = http.createServer(async (req, res) => {
           for(let i = 0; i < dataItems.length; i++) {
             // Show Progress
             // if (((i === 0) || (i === (dataItems.length - 1))) || (((i + 1) % 10) === 0)) {
-                console.log(`Processed item: ${i + 1}`);
+              console.log(`Processed item: ${i + 1}`);
             // }
 
+            let error, result, item;
             do {
-              let error, result, item;
-
               if (inputJSON) {
                 item = dataItems[i];
               } else {
@@ -409,11 +407,17 @@ const server = http.createServer(async (req, res) => {
                   balance: data[2]
                 }
               }
+              error = null;
               [error, result] = await runPromise(processMergeCard(page, item, makeDefault, objResult));
               if (error) {
                 // Click 'Card'
-                await page.$eval('input[type=submit]', el => el.click());
+                console.log(`Try Re-Add Card`);
+                let err, ret
+                [err, ret] = await runPromise(page.$eval('input[type=submit]', el => el.click()));
                 await page.waitForNetworkIdle({idleTime: idelTime});
+                if (err) {
+                  console.log(`Re-Add Card Fail`);
+                }
               }
               processResult = result;
             } while (error);
