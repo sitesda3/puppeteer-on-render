@@ -196,7 +196,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    if (req.url === '/') {
+    //if (req.url === '/') {
       //res.statusCode = 200;
       //res.setHeader('Content-Type', 'text/html; charset=UTF-8');
       //res.end(normalText);
@@ -243,8 +243,8 @@ console.log('browser launch done');
         const screenshot = await page.screenshot();
     console.log('screenshot done');
         res.end(screenshot, 'binary');
-      
-    }
+      return;
+    //}
 
     if (req.url.includes('stb')) {
       const queryObject = url.parse(req.url, true).query;
