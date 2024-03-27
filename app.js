@@ -2,7 +2,7 @@ const http = require('http');
 const url = require('url');
 const puppeteer = require('puppeteer');
 
-const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || null;//'localhost'
+const hostname = 'localhost';//process.env.RENDER_EXTERNAL_HOSTNAME || null
 const port = process.env.PORT || 3000;
 const baseDir = __dirname + "/";
 const debug = true;
