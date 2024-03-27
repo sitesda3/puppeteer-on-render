@@ -258,7 +258,7 @@ console.log('browser launch done');
       if (!(email && password)) {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-        res.end(normalText);
+        res.end('.',normalText);
         return;
       }
   
@@ -357,7 +357,7 @@ console.log('browser launch done');
         if (!(email && password)) {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-          res.end(normalText);
+          res.end('..',normalText);
           return;
         }
 
@@ -369,7 +369,7 @@ console.log('browser launch done');
           if (dataItems.length === 0) {
             res.statusCode = 200;
             res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-            res.end(normalText);
+            res.end('...',normalText);
             return;
           }
 
@@ -380,7 +380,7 @@ console.log('browser launch done');
         } else {
           res.statusCode = 200;
           res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-          res.end(normalText);
+          res.end('....',normalText);
           return;
         }
 
@@ -546,7 +546,7 @@ console.log('browser launch done');
   // Default
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-  res.end(normalText);
+  res.end('.....',normalText);
   return;
 });
     
