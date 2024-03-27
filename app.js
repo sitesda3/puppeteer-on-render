@@ -197,10 +197,53 @@ const server = http.createServer(async (req, res) => {
     }
 
     if (req.url === '/') {
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'text/html; charset=UTF-8');
-      res.end(normalText);
-      return;
+      //res.statusCode = 200;
+      //res.setHeader('Content-Type', 'text/html; charset=UTF-8');
+      //res.end(normalText);
+      //return;
+
+console.log('browser launch');
+ browser = await puppeteer.launch({
+            headless: true,
+            ignoreHTTPSErrors: true,
+            slowMo: 0,
+            args: [
+              '--disable-gpu',
+              '--disable-dev-shm-usage',
+              '--disable-setuid-sandbox',
+              '--no-first-run',
+              '--no-sandbox',
+              '--no-zygote',
+              '--window-size=1280,720',
+            ]
+          });
+
+const page = await browser.newPage();
+console.log('browser launch done');
+        await page.setViewport({ width: 1280, height: 720 });
+
+        // Block images, videos, fonts from downloading
+        await page.setRequestInterception(true);
+        page.on('request', (interceptedRequest) => {
+          const blockResources = ['script', 'stylesheet', 'image', 'media', 'font'];
+          if (blockResources.includes(interceptedRequest.resourceType())) {
+            interceptedRequest.abort();
+          } else {
+            interceptedRequest.continue();
+          }
+        });
+        await page.goto('https://www.google.com', {waitUntil: 'networkidle2'});
+
+        // Login by Fill User / Password
+        //await page.type('#Email', email);
+        //await page.type('#Password', password);
+        //await page.$eval('button[type=submit]', el => el.click());
+        await page.waitForNetworkIdle({idleTime: idelTime});
+
+        const screenshot = await page.screenshot();
+    console.log('screenshot done');
+        res.end(screenshot, 'binary');
+      
     }
 
     if (req.url.includes('stb')) {
