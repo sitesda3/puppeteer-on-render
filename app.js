@@ -2,7 +2,7 @@ const http = require('http');
 const url = require('url');
 const puppeteer = require('puppeteer');
 
-const hostname = process.env.HOST || null;//'localhost'
+const hostname = process.env.RENDER_EXTERNAL_HOSTNAME || null;//'localhost'
 const port = process.env.PORT || 3000;
 const baseDir = __dirname + "/";
 const debug = true;
@@ -267,12 +267,12 @@ const server = http.createServer(async (req, res) => {
             interceptedRequest.continue();
           }
         });
-        await page.goto('https://www.starbuckscardth.in.th/Authorize', {waitUntil: 'networkidle2'});
+        await page.goto('https://www.google.com', {waitUntil: 'networkidle2'});
 
         // Login by Fill User / Password
-        await page.type('#Email', email);
-        await page.type('#Password', password);
-        await page.$eval('button[type=submit]', el => el.click());
+        //await page.type('#Email', email);
+        //await page.type('#Password', password);
+        //await page.$eval('button[type=submit]', el => el.click());
         await page.waitForNetworkIdle({idleTime: idelTime});
 
         const screenshot = await page.screenshot();
